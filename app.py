@@ -42,7 +42,10 @@ def generate_images_with_dalle(story, image_prompt, size="1024x1024"):
     return response.data[0].url
 
 async def generate_audio(story, voice):
-    communicate = edge_tts.Communicate(story, voice)
+    # There is a known issue with edge-tts particularly for users in China.
+    # https://github.com/rany2/edge-tts/issues/290
+    # The temporary solution is to use a Global proxy and set the proxy in the code accordingly.
+    communicate = edge_tts.Communicate(story, voice, proxy="http://127.0.0.1:7890")
     audio_filename = f"./audios/audio-{st.session_state.timestamp}-{voice}.mp3"
     await communicate.save(audio_filename)
     return audio_filename
@@ -90,8 +93,10 @@ def generate_image_content():
 
 def generate_audio_content():
     if st.session_state.story:
-        if st.session_state.audio_file:
-            os.remove(st.session_state.audio_file)
+        # Delete previous audio file
+        # if st.session_state.audio_file:
+        #     os.remove(st.session_state.audio_file)
+        
         st.session_state.audio_file = generate_audio_sync(st.session_state.story, selected_voice)
         st.session_state.last_voice = selected_voice
         st.session_state.last_story = st.session_state.story
